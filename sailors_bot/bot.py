@@ -50,6 +50,7 @@ def get_myvisit_dates():
     try:
         response = send_request(prepare_request(get_access_token()))
         data = response.json()
+        logger.info(f"dates: {data}")
         if data.get("Results"):
             for available_date in data.get("Results", []):
                 available_dates.append(available_date.get("calendarDate"))
