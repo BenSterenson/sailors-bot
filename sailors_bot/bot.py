@@ -1,17 +1,27 @@
-import logging
 from datetime import date
+import logging
+import os
+
 import requests
 from requests import PreparedRequest, Response
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
-from configuration import config
-
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
-
 logger = logging.getLogger(__name__)
+
+
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+MY_VISIT_BASE_URL = os.getenv("MY_VISIT_BASE_URL")
+MY_VISIT_MAX_RESULTS = os.getenv("MY_VISIT_MAX_RESULTS", 31)
+MY_VISIT_ACCESS_TOKEN = os.getenv("MY_VISIT_ACCESS_TOKEN")
+
 registered_users = {}
+
+
+def get_access_token():
+    return MY_VISIT_ACCESS_TOKEN
 
 
 def send_request(prepared_request: PreparedRequest) -> Response:
@@ -20,18 +30,14 @@ def send_request(prepared_request: PreparedRequest) -> Response:
 
 
 def prepare_request(access_token: str) -> PreparedRequest:
-    request = requests.Request("GET", config.get("MY_VISIT", {}).get("BASE_URL"))
+    request = requests.Request("GET", MY_VISIT_BASE_URL)
 
     request.headers["Authorization"] = f"JWT {access_token}"
-    request.params["maxResults"] = config.get("MY_VISIT", {}).get("MAX_RESULTS", 31)
+    request.params["maxResults"] = MY_VISIT_MAX_RESULTS
     request.params["startDate"] = str(date.today())
     request.params["serviceId"] = 6142
 
     return request.prepare()
-
-
-def get_access_token():
-    return config.get("MY_VISIT", {}).get("JWT_TOKEN")
 
 
 def get_myvisit_dates():
@@ -77,7 +83,7 @@ def echo(update: Update, context: CallbackContext) -> None:
 
 def main():
     available_dates = get_myvisit_dates()
-    updater = Updater(config.get("TELEGRAM_TOKEN"), use_context=True)
+    updater = Updater(TELEGRAM_TOKEN, use_context=True)
 
     dispatcher = updater.dispatcher
 
