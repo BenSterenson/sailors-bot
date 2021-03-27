@@ -75,6 +75,11 @@ def notify_registered_users(updater: Updater, available_dates: List):
                 updater.bot.send_message(chat_id, f"New dates available {available_dates}")
 
 
+def get_dates(update: Update, context: CallbackContext):
+    available_dates = get_myvisit_dates()
+    update.message.reply_text(f"Available dates {available_dates}")
+
+
 def register(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id
     first_name = update.message.chat.first_name or ""
@@ -128,6 +133,7 @@ def main():
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler("register", register))
+    dispatcher.add_handler(CommandHandler("get_dates", get_dates))
     dispatcher.add_handler(CommandHandler("unregister", unregister))
     dispatcher.add_handler(CommandHandler("help", help_command))
 
