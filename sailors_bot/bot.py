@@ -1,8 +1,12 @@
+from typing import List
 from datetime import date
 import logging
 import os
 
 import requests
+import psycopg2
+import psycopg2.errors
+
 from requests import PreparedRequest, Response
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
@@ -16,8 +20,9 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 MY_VISIT_BASE_URL = os.getenv("MY_VISIT_BASE_URL")
 MY_VISIT_MAX_RESULTS = os.getenv("MY_VISIT_MAX_RESULTS", 31)
 MY_VISIT_ACCESS_TOKEN = os.getenv("MY_VISIT_ACCESS_TOKEN")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-registered_users = {}
+conn = psycopg2.connect(DATABASE_URL, sslmode="require")
 
 
 def get_access_token():
@@ -55,20 +60,55 @@ def get_myvisit_dates():
     return available_dates
 
 
-def register(update: Update, context: CallbackContext) -> None:
-    registered_users.update({update.message.chat_id: {"first_name": update.message.chat.first_name,
-                                                      "last_name": update.message.chat.last_name}})
+def notify_registered_users(updater: Updater, available_dates: List):
+    if available_dates:
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("select chat_id, first_name, last_name from sailors where is_registered = TRUE")
 
-    update.message.reply_text(
-        "Hi! Registered successfully - we will notify you once myvisit.com is available for registration"
-    )
+            registered_users = cursor.fetchall()
+
+            for chat_id, first_name, last_name in registered_users:
+                logger.info(
+                    f"sending notification to {first_name}, {last_name} chat_id: {chat_id}"
+                )
+                updater.bot.send_message(chat_id, f"New dates available {available_dates}")
+
+
+def register(update: Update, context: CallbackContext) -> None:
+    chat_id = update.message.chat_id
+    first_name = update.message.chat.first_name or ""
+    last_name = update.message.chat.last_name or ""
+    try:
+        with conn:
+            cur = conn.cursor()
+            command = f"INSERT INTO sailors(chat_id, first_name, last_name, is_registered) VALUES({chat_id}, '{first_name}', '{last_name}', TRUE)"
+            cur.execute(command)
+
+        update.message.reply_text(
+            "Hi! Registered successfully - we will notify you once myvisit.com is available for registration"
+        )
+
+    except psycopg2.errors.lookup("23505"):
+        with conn:
+            cur = conn.cursor()
+            cur.execute(f"UPDATE sailors SET is_registered=TRUE WHERE chat_id={chat_id}")
+
+        update.message.reply_text(
+            "Hi! Registered successfully - we will notify you once myvisit.com is available for registration"
+        )
+
+    except Exception as e:
+        logger.error(f"failed inserting user {chat_id} {first_name} {last_name} error - {e}")
 
 
 def unregister(update: Update, context: CallbackContext) -> None:
-    registered_users.pop(update.message.chat_id)
-    update.message.reply_text(
-        "Hi! Removed Registration successfully - Hope you passed the exam :)"
-    )
+    chat_id = update.message.chat_id
+    with conn:
+        cur = conn.cursor()
+        cur.execute(f"UPDATE sailors SET is_registered=FALSE WHERE chat_id={chat_id}")
+
+    update.message.reply_text("Hi! Removed Registration successfully - Hope you passed the exam :)")
 
 
 def help_command(update: Update, context: CallbackContext) -> None:
@@ -95,10 +135,7 @@ def main():
 
     updater.start_polling()
 
-    if available_dates:
-        for chat_id, user in registered_users.items():
-            logger.info(f"sending notification to {user.get('first_name')}, {user.get('last_name')} chat_id: {chat_id}")
-            updater.bot.send_message(chat_id, f"New dates available {available_dates}")
+    notify_registered_users(updater, available_dates)
 
     updater.idle()
 
