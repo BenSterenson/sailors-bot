@@ -21,8 +21,11 @@ MY_VISIT_BASE_URL = os.getenv("MY_VISIT_BASE_URL")
 MY_VISIT_MAX_RESULTS = os.getenv("MY_VISIT_MAX_RESULTS", 31)
 MY_VISIT_ACCESS_TOKEN = os.getenv("MY_VISIT_ACCESS_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
+ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
+
 
 conn = psycopg2.connect(DATABASE_URL, sslmode="require")
+updater = Updater(TELEGRAM_TOKEN, use_context=True)
 
 
 def get_access_token():
@@ -70,36 +73,48 @@ def notify_registered_users(updater: Updater, available_dates: List):
             registered_users = cursor.fetchall()
 
             for chat_id, first_name, last_name in registered_users:
-                logger.info(
-                    f"sending notification to {first_name}, {last_name} chat_id: {chat_id}"
-                )
+                logger.info(f"sending notification to {first_name}, {last_name} chat_id: {chat_id}")
                 updater.bot.send_message(chat_id, f"New dates available {available_dates}")
 
 
-def get_dates(update: Update, context: CallbackContext):
-    available_dates = get_myvisit_dates()
-    update.message.reply_text(f"Available dates {available_dates}")
+def update_user_status(chat_id: int, status: bool):
+    with conn:
+        cur = conn.cursor()
+        cur.execute(f"UPDATE sailors SET is_registered={status} WHERE chat_id={chat_id}")
+
+
+def get_raw_response(update: Update, context: CallbackContext):
+    try:
+        response = send_request(prepare_request(get_access_token()))
+        update.message.reply_text(f"Raw response: {response.content}")
+
+        data = response.json()
+        update.message.reply_text(f"Json Raw response: {data}")
+
+    except Exception as e:
+        update.message.reply_text(f"failed getting dates {e}")
+        logger.error(f"failed getting dates {e}")
 
 
 def register(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id
     first_name = update.message.chat.first_name or ""
     last_name = update.message.chat.last_name or ""
+    success = False
     try:
         with conn:
             cur = conn.cursor()
             command = f"INSERT INTO sailors(chat_id, first_name, last_name, is_registered) VALUES({chat_id}, '{first_name}', '{last_name}', TRUE)"
             cur.execute(command)
 
+        success = True
         update.message.reply_text(
             "Hi! Registered successfully - we will notify you once myvisit.com is available for registration"
         )
 
     except psycopg2.errors.lookup("23505"):
-        with conn:
-            cur = conn.cursor()
-            cur.execute(f"UPDATE sailors SET is_registered=TRUE WHERE chat_id={chat_id}")
-
+        update_user_status(chat_id=chat_id, status=True)
+        success = True
         update.message.reply_text(
             "Hi! Registered successfully - we will notify you once myvisit.com is available for registration"
         )
@@ -107,19 +122,30 @@ def register(update: Update, context: CallbackContext) -> None:
     except Exception as e:
         logger.error(f"failed inserting user {chat_id} {first_name} {last_name} error - {e}")
 
+    updater.bot.send_message(
+        ADMIN_CHAT_ID, f"Registration request {chat_id} {first_name} {last_name} success: {success}"
+    )
+
 
 def unregister(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id
-    with conn:
-        cur = conn.cursor()
-        cur.execute(f"UPDATE sailors SET is_registered=FALSE WHERE chat_id={chat_id}")
+    success = False
+    try:
+        update_user_status(chat_id=chat_id, status=False)
+        success = True
+        update.message.reply_text("Hi! Removed Registration successfully - Hope you passed the exam :)")
+    except Exception as e:
+        logger.error(f"failed to Removed Registration {chat_id} error - {e}")
 
-    update.message.reply_text("Hi! Removed Registration successfully - Hope you passed the exam :)")
+    updater.bot.send_message(
+        ADMIN_CHAT_ID, f"remove request {chat_id} success: {success}"
+    )
 
 
 def help_command(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text("Use /register to get notified once myvisit is available for registration")
-    update.message.reply_text("Use /unregister to stop receiving notification")
+    update.message.reply_text(
+        "Use /register to get notified once myvisit is available for registration\nUse /unregister to stop receiving notification"
+    )
 
 
 def echo(update: Update, context: CallbackContext) -> None:
@@ -129,16 +155,15 @@ def echo(update: Update, context: CallbackContext) -> None:
 
 def main():
     available_dates = get_myvisit_dates()
-    updater = Updater(TELEGRAM_TOKEN, use_context=True)
 
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler("register", register))
-    dispatcher.add_handler(CommandHandler("get_dates", get_dates))
+    dispatcher.add_handler(CommandHandler("get_raw_response", get_raw_response))
     dispatcher.add_handler(CommandHandler("unregister", unregister))
     dispatcher.add_handler(CommandHandler("help", help_command))
 
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, help_command))
 
     updater.start_polling()
 
