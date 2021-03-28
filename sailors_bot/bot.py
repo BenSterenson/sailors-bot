@@ -153,7 +153,7 @@ def echo(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(update.message.text)
 
 
-def main():
+def run_bot():
     available_dates = get_myvisit_dates()
 
     dispatcher = updater.dispatcher
@@ -171,6 +171,3 @@ def main():
 
     updater.idle()
 
-
-if __name__ == "__main__":
-    main()
