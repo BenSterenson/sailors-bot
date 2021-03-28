@@ -1,1 +1,1 @@
-clock: python scheduler.py
+web: python sailors_bot/bot.py
