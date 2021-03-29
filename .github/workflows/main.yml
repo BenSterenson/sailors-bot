@@ -13,6 +13,6 @@ jobs:
   curl:
     runs-on: ubuntu-latest
     steps:
-    - name: wget
+    - name: wakeup
       run: |
         curl ${{secrets.HEROKU_URL}}
