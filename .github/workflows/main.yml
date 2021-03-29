@@ -19,3 +19,4 @@ jobs:
         url: ${{secrets.HEROKU_URL}}
         method: 'GET'
         accept: 404
+        timeout: 60000
