@@ -151,7 +151,7 @@ def echo(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(update.message.text)
 
 
-def run_bot():
+def main():
     available_dates = get_myvisit_dates()
 
     dispatcher = updater.dispatcher
@@ -171,4 +171,4 @@ def run_bot():
 
 
 if __name__ == "__main__":
-    run_bot()
+    main()
