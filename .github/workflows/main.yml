@@ -14,6 +14,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: wget
-      uses: wei/wget@v1
-      with:
-        args: -O sample.html ${{secrets.HEROKU_URL}}
+      run: |
+        curl ${{secrets.HEROKU_URL}}
