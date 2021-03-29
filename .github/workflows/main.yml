@@ -13,7 +13,9 @@ jobs:
   curl:
     runs-on: ubuntu-latest
     steps:
-    - name: curl
-      uses: wei/curl@v1
+    - name: 'Call API'
+      uses: indiesdev/curl@v1
       with:
-        args: -X GET ${{secrets.HEROKU_URL}}
+        url: ${{secrets.HEROKU_URL}}
+        method: 'GET'
+        accept: 404
