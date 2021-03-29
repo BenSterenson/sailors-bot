@@ -22,7 +22,7 @@ MY_VISIT_MAX_RESULTS = os.getenv("MY_VISIT_MAX_RESULTS", 31)
 MY_VISIT_ACCESS_TOKEN = os.getenv("MY_VISIT_ACCESS_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
-PORT = int(os.getenv('PORT', 5000))
+PORT = int(os.getenv("PORT", 8443))
 
 
 conn = psycopg2.connect(DATABASE_URL, sslmode="require")
@@ -138,9 +138,7 @@ def unregister(update: Update, context: CallbackContext) -> None:
     except Exception as e:
         logger.error(f"failed to Removed Registration {chat_id} error - {e}")
 
-    updater.bot.send_message(
-        ADMIN_CHAT_ID, f"remove request {chat_id} success: {success}"
-    )
+    updater.bot.send_message(ADMIN_CHAT_ID, f"remove request {chat_id} success: {success}")
 
 
 def help_command(update: Update, context: CallbackContext) -> None:
@@ -166,8 +164,12 @@ def run_bot():
 
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, help_command))
 
-    updater.start_webhook(listen="0.0.0.0", port=int(PORT), url_path=TELEGRAM_TOKEN)
-    updater.bot.setWebhook('https://sailors.herokuapp.com/' + TELEGRAM_TOKEN)
+    updater.start_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path=TELEGRAM_TOKEN,
+        webhook_url="https://sailors.herokuapp.com/" + TELEGRAM_TOKEN,
+    )
 
     notify_registered_users(updater, available_dates)
 
