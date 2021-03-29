@@ -13,10 +13,7 @@ jobs:
   curl:
     runs-on: ubuntu-latest
     steps:
-    - name: 'Call API'
-      uses: indiesdev/curl@v1
+    - name: wget
+      uses: wei/wget@v1
       with:
-        url: ${{secrets.HEROKU_URL}}
-        method: 'GET'
-        accept: 404
-        timeout: 60000
+        args: -O sample.html ${{secrets.HEROKU_URL}}
