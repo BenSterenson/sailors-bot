@@ -1,1 +1,1 @@
-web: python3 sailors_bot/bot.py
+web: python sailors_bot/bot.py
