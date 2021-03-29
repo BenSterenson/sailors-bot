@@ -22,7 +22,6 @@ MY_VISIT_MAX_RESULTS = os.getenv("MY_VISIT_MAX_RESULTS", 31)
 MY_VISIT_ACCESS_TOKEN = os.getenv("MY_VISIT_ACCESS_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
-PORT = int(os.getenv("PORT", 8443))
 
 
 conn = psycopg2.connect(DATABASE_URL, sslmode="require")
@@ -75,7 +74,7 @@ def notify_registered_users(updater: Updater, available_dates: List):
 
             for chat_id, first_name, last_name in registered_users:
                 logger.info(f"sending notification to {first_name}, {last_name} chat_id: {chat_id}")
-                updater.bot.send_message(chat_id, f"New dates available {available_dates}")
+                updater.bot.send_message(chat_id, f"New dates available {available_dates} at myvisit.com")
 
 
 def update_user_status(chat_id: int, status: bool):
@@ -164,12 +163,7 @@ def run_bot():
 
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, help_command))
 
-    updater.start_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        url_path=TELEGRAM_TOKEN,
-        webhook_url="https://sailors.herokuapp.com/" + TELEGRAM_TOKEN,
-    )
+    updater.start_polling()
 
     notify_registered_users(updater, available_dates)
 
