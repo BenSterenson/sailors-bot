@@ -22,6 +22,7 @@ MY_VISIT_MAX_RESULTS = os.getenv("MY_VISIT_MAX_RESULTS", 31)
 MY_VISIT_ACCESS_TOKEN = os.getenv("MY_VISIT_ACCESS_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
+PORT = int(os.getenv('PORT', 5000))
 
 
 conn = psycopg2.connect(DATABASE_URL, sslmode="require")
@@ -165,9 +166,13 @@ def run_bot():
 
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, help_command))
 
-    updater.start_polling()
+    updater.start_webhook(listen="0.0.0.0", port=int(PORT), url_path=TELEGRAM_TOKEN)
+    updater.bot.setWebhook('https://sailors.herokuapp.com/' + TELEGRAM_TOKEN)
 
     notify_registered_users(updater, available_dates)
 
     updater.idle()
 
+
+if __name__ == "__main__":
+    run_bot()
