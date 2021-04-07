@@ -1,5 +1,6 @@
 from typing import List
 from datetime import date
+from datetime import timedelta
 import logging
 import os
 
@@ -44,7 +45,7 @@ def prepare_request(access_token: str) -> PreparedRequest:
 
     request.headers["Authorization"] = f"JWT {access_token}"
     request.params["maxResults"] = MY_VISIT_MAX_RESULTS
-    request.params["startDate"] = str(date.today())
+    request.params["startDate"] = str(date.today() + timedelta(days=1))
     request.params["serviceId"] = 6142
 
     return request.prepare()
