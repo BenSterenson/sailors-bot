@@ -244,7 +244,7 @@ def help_command(update: Update, context: CallbackContext) -> None:
 
 הסר תל אביב ממוחשב
 הסר תל אביב חיפה ממוחשב
-רישום תל אביב חיפה בכתב
+הסר תל אביב חיפה בכתב
 הסר כללי
 """
     )
