@@ -229,7 +229,7 @@ def notify_all(update: Update, context: CallbackContext) -> None:
 
     for chat_id, first_name, last_name, registered_services in registered_users:
         logger.info(f"sending notification to {first_name}, {last_name} chat_id: {chat_id}")
-        updater.bot.send_message(chat_id, f"היי {first_name}, יצאנו בגירסה חדשה! ואנחנו תומכים בקבלת התראות על מבחנים בסניפים נוספים(תל אביב, חיפה, טבריה) כמו כן בסוגי מבחנים שונים(ממוחשב, כתב) /help לפירוט מלא. ")
+        updater.bot.send_message(chat_id, f"היי {first_name}, יצאנו בגירסה חדשה! ואנחנו תומכים בקבלת התראות על מבחנים בסניפים נוספים(תל אביב, חיפה, טבריה) כמו כן בסוגי מבחנים שונים(ממוחשב, כתב) /help לפירוט מלא, אין צורך להרשם מחדש לקבלת התראות לבחינה בסניף תל אביב בחינה ממוחשבת. ")
 
 
 def help_command(update: Update, context: CallbackContext) -> None:
