@@ -224,14 +224,6 @@ def unregister(update: Update, context: CallbackContext) -> None:
     updater.bot.send_message(ADMIN_CHAT_ID, f"remove request {chat_id} success: {success}")
 
 
-def notify_all(update: Update, context: CallbackContext) -> None:
-    registered_users = get_all_users()
-
-    for chat_id, first_name, last_name, registered_services in registered_users:
-        logger.info(f"sending notification to {first_name}, {last_name} chat_id: {chat_id}")
-        updater.bot.send_message(chat_id, f"היי {first_name}, יצאנו בגירסה חדשה! ואנחנו תומכים בקבלת התראות על מבחנים בסניפים נוספים(תל אביב, חיפה, טבריה) כמו כן בסוגי מבחנים שונים(ממוחשב, כתב) /help לפירוט מלא, אין צורך להרשם מחדש לקבלת התראות לבחינה בסניף תל אביב בחינה ממוחשבת. ")
-
-
 def help_command(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         """הפקודות הבאות זמינות:
@@ -270,7 +262,6 @@ def main():
 
     dispatcher.add_handler(PrefixHandler("", "רישום", register))
     dispatcher.add_handler(PrefixHandler("", "הסר", unregister))
-    dispatcher.add_handler(CommandHandler("notify_all", notify_all))
     dispatcher.add_handler(CommandHandler("get_raw_response", get_raw_response))
     dispatcher.add_handler(CommandHandler("help", help_command))
 
