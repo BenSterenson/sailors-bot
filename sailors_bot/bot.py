@@ -192,7 +192,7 @@ def context_to_services(context):
     services = set()
     if "רישוי" in context:
         if "נתניה" in context:
-            services.add(6112)
+            services.add(2116)
         if "פתח תקווה" in context or "פתח תקוה" in context or "פתח-תקווה" in context:
             services.add(1920)
 
