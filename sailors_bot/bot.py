@@ -32,6 +32,8 @@ SERVICE_IDS = {
     6143: "סניף חיפה בחינה בכתב",
     6148: "סניף תל-אביב בחינה בכתב",
     6141: "סניף טבריה בחינה ממוחשבת",
+    2116: "משרד התחבורה סניף נתניה",
+    1920: "משרד התחבורה סניף פתח תקווה",
 }
 
 conn = psycopg2.connect(DATABASE_URL, sslmode="require")
@@ -188,6 +190,12 @@ def register(update: Update, context: CallbackContext) -> None:
 
 def context_to_services(context):
     services = set()
+    if "רישוי" in context:
+        if "נתניה" in context:
+            services.add(6112)
+        if "פתח תקווה" in context or "פתח תקוה" in context or "פתח-תקווה" in context:
+            services.add(1920)
+
     if "ממוחשב" in context:
         if "תא" in context or "תל אביב" in context or "תל-אביב" in context or "תל אביב" in context:
             services.add(6142)
@@ -202,7 +210,7 @@ def context_to_services(context):
         if "חיפה" in context:
             services.add(6143)
     elif "כללי" in context:
-        services = set(SERVICE_IDS.keys())
+        services = set(SERVICE_IDS.keys()) - set({1920, 2116})
 
     return services
 
