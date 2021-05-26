@@ -205,7 +205,7 @@ def context_to_services(context):
             services.add(6141)
 
     elif "כתב" in context:
-        if "תא" in context:
+        if "תא" in context or "תל אביב" in context or "תל-אביב" in context or "תל אביב" in context:
             services.add(6148)
         if "חיפה" in context:
             services.add(6143)
