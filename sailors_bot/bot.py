@@ -182,9 +182,14 @@ def register(update: Update, context: CallbackContext) -> None:
 
     except Exception as e:
         logger.error(f"failed inserting user {chat_id} {first_name} {last_name} error - {e}")
+        updater.bot.send_message(
+            ADMIN_CHAT_ID,
+            f"Exception {chat_id} {first_name} {last_name} success: {success}, keep: {services_to_keep}, error - {e}",
+        )
 
     updater.bot.send_message(
-        ADMIN_CHAT_ID, f"Registration request {chat_id} {first_name} {last_name} success: {success}"
+        ADMIN_CHAT_ID,
+        f"Registration request {chat_id} {first_name} {last_name} success: {success}, keep: {services_to_keep}",
     )
 
 
@@ -220,16 +225,16 @@ def unregister(update: Update, context: CallbackContext) -> None:
     services_to_remove = context_to_services(" ".join(context.args))
     registered_services = get_registered_services(chat_id)
     services_to_keep = registered_services - services_to_remove
-    success = False
     try:
         update_user_status(chat_id=chat_id, registered_services=services_to_keep)
-        success = True
         removed_services_text = ", ".join(SERVICE_IDS.get(service_id) for service_id in services_to_remove)
         update.message.reply_text(f"אוקי, אנחנו נפסיק לשלוח לך התראות על מועדי בחינה ב{removed_services_text}")
     except Exception as e:
         logger.error(f"failed to Removed Registration {chat_id} error - {e}")
 
-    updater.bot.send_message(ADMIN_CHAT_ID, f"remove request {chat_id} success: {success}")
+    updater.bot.send_message(
+        ADMIN_CHAT_ID, f"remove request {chat_id} keep: {services_to_keep} remove: {services_to_remove}"
+    )
 
 
 def help_command(update: Update, context: CallbackContext) -> None:
