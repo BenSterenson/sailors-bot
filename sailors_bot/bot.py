@@ -105,18 +105,26 @@ def notify_registered_users(updater: Updater, available_dates: defaultdict):
     registered_users = get_all_users()
 
     for chat_id, first_name, last_name, registered_services in registered_users:
-        personal_dates = {}
-        registered_services = [] if registered_services is None else registered_services
-        for service in registered_services:
-            if service in available_dates:
-                name = SERVICE_IDS.get(service)
-                personal_dates[name] = available_dates[service]
+        try:
+            personal_dates = {}
+            registered_services = [] if registered_services is None else registered_services
+            for service in registered_services:
+                if service in available_dates:
+                    name = SERVICE_IDS.get(service)
+                    personal_dates[name] = available_dates[service]
 
-        if personal_dates:
-            personal_msg = format_msg(personal_dates)
+            if personal_dates:
+                personal_msg = format_msg(personal_dates)
 
-            logger.info(f"sending notification to {first_name}, {last_name} chat_id: {chat_id} dates {personal_dates}")
-            updater.bot.send_message(chat_id, f"היי {first_name}, {personal_msg} הרשמה ב myvisit.com")
+                logger.info(f"sending notification to {first_name}, {last_name} chat_id: {chat_id} dates {personal_dates}")
+                updater.bot.send_message(chat_id, f"היי {first_name}, {personal_msg} הרשמה ב myvisit.com")
+
+        except Exception as e:
+            logger.info(f"Exception {chat_id} {first_name} {last_name}, error - {e}")
+            updater.bot.send_message(
+                ADMIN_CHAT_ID,
+                f"Exception {chat_id} {first_name} {last_name}, error - {e}"
+            )
 
 
 def update_user_status(chat_id: int, registered_services):
